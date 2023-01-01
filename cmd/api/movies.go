@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
 	"greenlight.aidostt.net/internal/data"
 	"greenlight.aidostt.net/internal/validator"
 	"net/http"
@@ -31,7 +32,17 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	fmt.Fprintf(w, "%+v\n", input)
+	err = app.models.Movies.Insert(movie)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.ID))
+	err = app.writeJSON(w, http.StatusCreated, envelope{"movie": movie}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +58,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		Title:     "Casablanca",
 		Runtime:   102,
 		Genres:    []string{"drama", "romance", "war"},
-		Version:   1,
+		Version:   pgtype.UUID{Valid: false},
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
