@@ -101,3 +101,4 @@ func openDB(cfg config) (*pgxpool.Pool, error) {
 //psql --host=localhost --dbname=greenlight --username=greenlight
 //or
 //psql $GREENLIGHT_DB_DSN
+//chcp.com 1251
